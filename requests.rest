@@ -1,0 +1,125 @@
+//// VSCode Addon: Rest Client
+// https://medium.com/lseg-developer-community/how-to-test-rest-api-with-visual-studio-code-rest-client-extensions-9f2e061d0299
+
+### Variables
+
+@serverUrl = http://localhost:3000
+@authUrl = http://localhost:4000
+
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+// DEV fetch whole DBs // :3000
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+
+###
+
+// Get all users (dev)
+GET {{serverUrl}}/users
+
+###
+
+// Get all posts (dev)
+GET {{serverUrl}}/allposts
+
+###
+
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+// USER REGISTER // :3000
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+
+###
+
+// Sign up
+POST {{serverUrl}}/users
+Content-Type: application/json
+
+{
+    "username": "FirstName",
+    "email": "name@email.com",
+    "password": "1234"
+}
+
+### Login (password check). JWTs in response.
+# @name userAuth
+
+POST {{serverUrl}}/users/login
+Content-Type: application/json
+
+{
+    "email": "name@email.com",
+    "password": "1234"
+}
+
+### Variable Response
+@accessToken = {{userAuth.response.body.$.data.accessToken}}
+@refreshToken = {{userAuth.response.body.$.data.refreshToken}}
+
+###
+
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+// JWT token // :4000
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+
+### (get JWTs). (*** For Login --> Use (above) serverUrl/users/login. It calls this from serverUrl ***)
+
+POST {{authUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "userid":"Fi_wcvpgvta69",
+    "username":"FirstName",
+    "email": "name@email.com"
+}
+
+### Delete refresh token at logout
+
+DELETE {{authUrl}}/auth/logout
+Content-Type: application/json
+
+{
+    "token": "{{refreshToken}}"
+}
+
+### Request new access token with refresh token. RefreshToken don't expire, but is deleted (above) at logout
+# @name newToken
+POST {{authUrl}}/token
+Content-Type: application/json
+
+{
+    "token": "{{refreshToken}}"
+}
+
+###
+
+@accessToken = {{newToken.response.body.$.data.accessToken}}
+
+###
+
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+// POSTS // :3000
+// ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
+
+### GET POSTS. Use AccessToken received in Login response. AccessToken expires in 20s for dev purposes
+
+GET {{serverUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### MAKE POST
+
+POST {{serverUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "textcontent": "Good Morning"
+}
+
+### DEL POST
+
+DELETE {{serverUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "postid": "p_Fi21ifsllcxcm"
+}
