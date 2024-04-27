@@ -1,5 +1,5 @@
 // Login, log out.. Managing Access and Refresh tokens
-// Tokens Payload: {userid: '', email: ''};
+// Tokens Payload: {userid, username, email};
 
 
 require('dotenv').config();
@@ -23,16 +23,6 @@ const corsOptions = {
     credentials: true,
     origin:whiteList,
     headers:'*',
-    // origin: (origin, callback) => {
-    //     if(origin){console.log("origin: "+ origin)}
-    //     else{console.log("no origin");}
-    //     // `!origin` allows server-to-server requests (ie, localhost requests)
-    //     if(!origin || whiteList.indexOf(origin) !== -1) {
-    //         callback(null, true)
-    //     } else {
-    //         callback(new Error("(v2) :4000. Not allowed by CORS: "+ origin))
-    //     }
-    // },
     optionsSuccessStatus: 200
 }
 
@@ -50,22 +40,6 @@ app.use((req,res,next) =>{
     console.log("req.method: " + req.method);
     next();
 });
-
-// // middleware - add headers
-// app.use((req,res,next)=>{
-//     /* @dev First, should read more about security */
-//     res.append('Access-Control-Allow-Origin', '*');
-//     res.append('Access-Control-Allow-Headers', '*');
-//     res.append('Access-Control-Allow-Methods', 'OPTIONS, POST, GET');
-//     res.append('Access-Control-Max-Age', 2592000);
-//     res.append('Content-Type', 'application/json');
-//     // console.log("app.use(cors middleware)");
-
-//     // Cookie test - allow credentials
-//     res.append('Access-Control-Allow-Credentials', '*');
-
-//     next();
-// });
 
 function getExpireDateUTC(){
     console.log("getExpireDateUTC()")
@@ -93,7 +67,6 @@ function getExpireDateUTC(){
 // AccessToken is valid for duration:
 // Eg: 60000, "1y", "2 days", "7d", "10h", "2.5 hrs", "60s", "1m". Plain Number means milliseconds.
 const accessExpireTime = '20s';
-
 
 // Check refresh token, create new tokens if ok
 app.post('/token', async (req,res) => {
@@ -184,8 +157,6 @@ app.post('/auth/login', async (req,res) => {
     const newTokensObject = {data:{ accessToken : accessToken, refreshToken : refreshToken, accessExpires : accessExpires }, err:""};
     res.send(newTokensObject);
 });
-
-
 
 function generateAccessToken(payload) {
     // jwt.sign(payload, secretOrPrivateKey, [options, callback]) // (Asynchronous) If a callback is supplied

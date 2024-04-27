@@ -50,9 +50,10 @@ export function validateUsername(username){
 }
 
 export function validatePassword(password){
+    // For dev purposes, it's valid enough when > 3 letters. (checked in validateLoginFields)
+    return "";
     // Validity: 1 lower and 1 upper case letter, 1 digit, length between 4-16, doesn't include "1234" or "pass"
     // (start of line) (>0 lower case letters) (>0 upper case letters) (>0 digits) (no "1234"|"pass") (min,max length) (end of line)
-    return "";
     const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?!.*(1234|pass)).{3,17}$/gm;
     const valid = re.test(password);
     if (!valid){

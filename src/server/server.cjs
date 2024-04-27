@@ -37,9 +37,8 @@ const corsOptions = {
 
 // CORS options
 app.use(cors(corsOptions))
-
-// Requests will use JSON
 app.use(express.json());
+
 // middleware - add headers
 // app.use((req,res,next)=>{
 //     /* @dev First, should read more about security */
@@ -59,9 +58,9 @@ app.use(express.json());
 // ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
 // Users data for dev purposes
 // [ {"username": "name", "email": "name@email.com", "password": "hashed password" } , ... ]
+// Dev "DB" array
 const users = [];
 app.get('/users', async (req, res) => {
-    // res.json(users);
     let allUsers = [];
     let query = "SELECT * FROM "+process.env.USERS_TABLE;
     await dbServices.getDb(process.env.USERS_PATH, process.env.USERS_TABLE)
@@ -99,7 +98,6 @@ app.post('/users', async (req, res) => {
         //     email: req.body.email, 
         //     password: hashedPassword
         // };
-        // users.push(user);
 
         // Add to DB
         let userid = randstr( (req.body.username.substr(0,2)+"_") );
@@ -133,19 +131,10 @@ app.post('/users/login', async (req,res) => {
 
     await getUserFromDb(req.body.email)
     .then(async (rows) =>{
-
-    // let query = "SELECT * FROM "+process.env.USERS_TABLE+" WHERE email=?";
-    // let params = [req.body.email];
-    // await dbServices.getDb(process.env.USERS_PATH,process.env.USERS_TABLE)
-    // .then( async (db) =>  { return await dbServices.getRows(db, query, params)})
-    // .then(async (rows) => {
-
-
         if(!rows.length == 1){
             return res.status(400).send( {err:"User not found."} );
         }
         user = rows[0];
-
         // Compare password to hashed password
         try{
             console.log("Login - user ok with given email");
@@ -190,7 +179,7 @@ app.post('/users/login', async (req,res) => {
     }
 });
 
-// Login (v2) - cookies test
+// Login (v2) - cookies test - NOT IN USE
 app.post('/users/login2', async (req,res) => {
     const user = users.find(user => user.email === req.body.email);
     console.log("app.post('/users/login2'. users.length: " + users.length );
@@ -293,26 +282,6 @@ app.post('/users/login2', async (req,res) => {
 // ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
 // JWT token testing //
 // ¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤ //
-const posts = [
-    {
-        username: 'FirstName',
-        title: 'Post 1'
-    },
-    {
-        username: 'OtherName',
-        title: 'Post 2'
-    },
-];
-const posts2 = [
-    {
-        email: 'name@email.com',
-        title: 'some old post from name@email'
-    },
-    {
-        email: 'a@b.com',
-        title: 'some old post from a@b'
-    }
-];
 
 // Use middleware (func) to check auth
 // Get users' posts
@@ -354,7 +323,6 @@ app.post('/posts', authenticateToken, async (req,res) => {
     .then((db) => {dbServices.insertRow(db, query, params)})
     .catch((err) => {res.status(500).send( {err:"DB error. " + err.toString()} )});
 
-    // res = makeResWithHeaders(res);
     // res.status(201).send(); // Created. Send blank payload
     res.status(201).send({data:{msg:"Post saved"}, err:""}); // Created. Send message in {msg: "info about request success"}
 });
@@ -398,16 +366,12 @@ async function authenticateToken(req, res, next) {
 
     const token = authHeader && authHeader.split(' ')[1]; // undefined | TOKEN
     if (token == null) {
-        // return res.sendStatus(401); // Unauthorized. No token.
-        // res.statusMessage = "No Token. Can't authenticate"
-        // return res.status(401).end();
         console.log("  -401 (No Access Token)");
         return res.status(401).send({err:"No Access Token. Can't authenticate"});
     }
     console.log("Token: "+ token);
     // jwt.verify(token, secretOrPublicKey, [options, callback]) // (Asynchronous) If a callback is supplied
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        // if(err) return res.sendStatus(403); // Forbidden. Token exists, but not valid (--> expired)
         if(err) {
             // Forbidden. Token exists, but not valid (--> expired)
             console.log("  -ERR: " + err.toString());
@@ -418,14 +382,16 @@ async function authenticateToken(req, res, next) {
         // Valid token. Add payload to request and move forward.
         console.log("Valid token. Got user: " + user.email.toString() + " and DIR:");
         console.dir(user);
-        // user = {email: email} // set inside authServer -> app.post('/auth/login', ..)
+        // Add user to req
         req.user = user;
         next();
     });
 
 }
+// Random string for Ids
 function randstr(prefix)
 {
+    // https://stackoverflow.com/a/59837035
     return Math.random().toString(36).replace('0.',prefix || '');
 }
 

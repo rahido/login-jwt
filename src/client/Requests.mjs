@@ -375,18 +375,3 @@ async function makeRequest(req){
     });
 };
 
-// example
-let postObj = {name:"obj name", otherinfo: "test running"};
-let url = "someBaseUrl/requestAt";
-function makePostRequest() {
-    fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(postObj),
-        headers: {'Content-type': 'application/json; charset=UTF-8'}
-    })
-    .then(response => {
-        if(!response.ok) {throw new Error("Could not reach the site")}  // ok status 200-299
-        return response.json()})
-    .then(json => console.log(json))
-    .catch(e => console.log(e));
-};
